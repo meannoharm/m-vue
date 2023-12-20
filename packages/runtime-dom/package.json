@@ -1,5 +1,5 @@
 {
-  "name": "@vue/runtime-dom",
+  "name": "@m-vue/runtime-dom",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",

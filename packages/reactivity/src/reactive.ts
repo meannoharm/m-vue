@@ -1,4 +1,4 @@
-import { isObject } from '@vue/shared';
+import { isObject } from '@m-vue/shared';
 import { mutableHandlers, ReactiveFlags } from './baseHandler';
 
 // 做一次缓存

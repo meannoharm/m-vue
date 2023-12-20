@@ -1,5 +1,5 @@
 import { reactive } from "./reactive";
-import { isArray, isObject } from "@vue/shared";
+import { isArray, isObject } from "@m-vue/shared";
 import { trackEffects, triggerEffect } from "./effect";
 
 function toReactive(value) {

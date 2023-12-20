@@ -1,5 +1,5 @@
 import { reactive } from "./reactive";
-import { isObject } from "@vue/shared";
+import { isObject } from "@m-vue/shared";
 import { track, trigger } from "./effect";
 
 // 标记是否已经是响应式数据

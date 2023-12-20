@@ -1,4 +1,4 @@
-import { isString, ShapeFlags } from "@vue/shared";
+import { isString, ShapeFlags } from "@m-vue/shared";
 import { createVnode, isSameVnode, Text } from "./vnode";
 
 export function createRenderer(renderOptions) {

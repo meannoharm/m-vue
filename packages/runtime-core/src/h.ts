@@ -1,5 +1,5 @@
 import { isObject } from "./../../shared/src/index";
-import { isArray } from "@vue/shared";
+import { isArray } from "@m-vue/shared";
 import { createVnode, isVnode } from "./vnode";
 
 // 返回后children只可能是数组或者文本

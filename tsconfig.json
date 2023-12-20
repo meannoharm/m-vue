@@ -14,7 +14,7 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@vue/*": ["packages/*/src"],
+      "@m-vue/*": ["packages/*/src"],
     }
   }
 }

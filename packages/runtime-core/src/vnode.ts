@@ -1,4 +1,4 @@
-import { isString, ShapeFlags, isArray } from "@vue/shared";
+import { isString, ShapeFlags, isArray } from "@m-vue/shared";
 
 export const Text = Symbol("Text");
 

@@ -1,4 +1,4 @@
-import { isFunction, isObject } from "@vue/shared";
+import { isFunction, isObject } from "@m-vue/shared";
 import { isReactive } from "./reactive";
 import { ReactiveEffect } from "./effect";
 
