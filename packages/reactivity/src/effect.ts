@@ -13,7 +13,10 @@ export class ReactiveEffect {
   // 记录依赖其的属性
   public deps = [];
   public active = true;
-  constructor(public fn, public scheduler) {}
+  constructor(
+    public fn,
+    public scheduler,
+  ) {}
 
   // 执行effect
   run() {

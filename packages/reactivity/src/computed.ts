@@ -1,5 +1,5 @@
-import { isFunction } from "@m-vue/shared";
-import { ReactiveEffect, trackEffects, triggerEffect } from "./effect";
+import { isFunction } from '@m-vue/shared';
+import { ReactiveEffect, trackEffects, triggerEffect } from './effect';
 
 class ComputedRefImpl {
   public effect;
@@ -9,7 +9,10 @@ class ComputedRefImpl {
   public __v_isRef = true;
   public _value;
   public dep = new Set();
-  constructor(public getter, public setter) {
+  constructor(
+    public getter,
+    public setter,
+  ) {
     this.effect = new ReactiveEffect(getter, () => {
       // 依赖属性变化，出发此调度函数
       if (!this._dirty) {
@@ -43,7 +46,7 @@ export const computed = (getterOrOptions) => {
   if (onlyGetter) {
     getter = getterOrOptions;
     setter = () => {
-      throw new Error("Computed getter is read-only.");
+      throw new Error('Computed getter is read-only.');
     };
   } else {
     getter = getterOrOptions.get;

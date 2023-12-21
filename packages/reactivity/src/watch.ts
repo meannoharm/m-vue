@@ -1,6 +1,6 @@
-import { isFunction, isObject } from "@m-vue/shared";
-import { isReactive } from "./reactive";
-import { ReactiveEffect } from "./effect";
+import { isFunction, isObject } from '@m-vue/shared';
+import { isReactive } from './reactive';
+import { ReactiveEffect } from './effect';
 
 // 递归
 const traversal = (value, set = new Set()) => {

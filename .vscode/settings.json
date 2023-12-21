@@ -1,5 +1,4 @@
 {
-  "cSpell.words": [
-    "Vnode"
-  ]
+  "editor.formatOnSave": true,
+  "cSpell.words": ["Vnode"]
 }

@@ -1,6 +1,6 @@
-import { reactive } from "./reactive";
-import { isArray, isObject } from "@m-vue/shared";
-import { trackEffects, triggerEffect } from "./effect";
+import { reactive } from './reactive';
+import { isArray, isObject } from '@m-vue/shared';
+import { trackEffects, triggerEffect } from './effect';
 
 function toReactive(value) {
   return isObject(value) ? reactive(value) : value;
@@ -31,7 +31,10 @@ export const ref = (value) => {
 };
 
 class ObjectRefImpl {
-  constructor(public object, public key) {}
+  constructor(
+    public object,
+    public key,
+  ) {}
   get value() {
     return this.object[this.key];
   }

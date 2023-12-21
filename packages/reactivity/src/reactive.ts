@@ -5,13 +5,13 @@ import { mutableHandlers, ReactiveFlags } from './baseHandler';
 const reactiveMap = new WeakMap();
 
 export const isReactive = (value) => {
-  return !!(value && value[ReactiveFlags.IS_REACTIVE])
-}
+  return !!(value && value[ReactiveFlags.IS_REACTIVE]);
+};
 
 // 将数据转换成响应式数据
 export const reactive = (target) => {
   if (isObject(target)) {
-    return
+    return;
   }
 
   if (target[ReactiveFlags.IS_REACTIVE]) {
@@ -26,9 +26,9 @@ export const reactive = (target) => {
     return existingProxy;
   }
 
-  const proxy = new Proxy(target, mutableHandlers)
+  const proxy = new Proxy(target, mutableHandlers);
 
   reactiveMap.set(target, proxy);
 
   return proxy;
-}
+};
