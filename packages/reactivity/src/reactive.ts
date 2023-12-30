@@ -1,16 +1,25 @@
 import { isObject } from '@m-vue/shared';
-import { mutableHandlers } from './baseHandler';
+import { mutableHandlers, readonlyHandlers, shallowReactiveHandlers } from './baseHandler';
 import { ReactiveFlags } from './constants';
 
 // 做一次缓存
 const reactiveMap = new WeakMap();
-
+export interface Target {
+  [ReactiveFlags.IS_REACTIVE]?: boolean;
+  [ReactiveFlags.RAW]?: any;
+  [ReactiveFlags.IS_READONLY]?: any;
+}
 export const isReactive = (value) => {
   return !!(value && value[ReactiveFlags.IS_REACTIVE]);
 };
 
 // 将数据转换成响应式数据
-export const reactive = (target) => {
+export const createReactive = (
+  target,
+  isReadonly: boolean,
+  baseHandlers: ProxyHandler<any>,
+  proxyMap: WeakMap<Target, any>,
+) => {
   if (isObject(target)) {
     return;
   }
@@ -20,16 +29,32 @@ export const reactive = (target) => {
     return target;
   }
 
-  let existingProxy = reactiveMap.get(target);
+  let existingProxy = proxyMap.get(target);
 
   if (existingProxy) {
     // 同一个对象,直接返回
     return existingProxy;
   }
 
-  const proxy = new Proxy(target, mutableHandlers);
+  const proxy = new Proxy(target, baseHandlers);
 
-  reactiveMap.set(target, proxy);
+  proxyMap.set(target, proxy);
 
   return proxy;
 };
+
+export function reactive(target) {
+  return createReactive(target, false, mutableHandlers, reactiveMap);
+}
+
+export function shallowReactive(target) {
+  return createReactive(target, false, shallowReactiveHandlers, reactiveMap);
+}
+
+export function readonly(target) {
+  return createReactive(target, true, readonlyHandlers, reactiveMap);
+}
+
+export function shallowReadonly(target) {
+  return createReactive(target, true, readonlyHandlers, reactiveMap);
+}
