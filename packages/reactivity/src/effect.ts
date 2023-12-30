@@ -1,5 +1,12 @@
 export let activeEffect = undefined;
 
+export const ITERATE_KEY = Symbol('iterate');
+export enum TriggerType {
+  ADD = 'add',
+  SET = 'set',
+  DELETE = 'delete',
+}
+
 function cleanupEffect(effect) {
   const { deps } = effect;
   for (let i = 0; i < deps.length; i++) {
@@ -85,11 +92,25 @@ export const trackEffects = (dep) => {
 export const trigger = (target, type, key, newValue, oldValue) => {
   const depsMap = targetMap.get(target);
   if (!depsMap) return;
-  let effects = depsMap.get(key);
+  const effects = depsMap.get(key);
+  const iterateEffects = depsMap.get(ITERATE_KEY);
 
-  if (effects) {
-    triggerEffect(effects);
+  const effectsToRun = new Set();
+  // 将与key相关的effect添加到effectsToRun
+  effects &&
+    effects.forEach((effect) => {
+      effectsToRun.add(effect);
+    });
+
+  if (type === TriggerType.ADD || type === TriggerType.DELETE) {
+    // 将与ITERATE_KEY相关的effect添加到effectsToRun
+    iterateEffects &&
+      iterateEffects.forEach((effect) => {
+        effectsToRun.add(effect);
+      });
   }
+
+  triggerEffect(effectsToRun);
 };
 
 export const triggerEffect = (effects) => {
