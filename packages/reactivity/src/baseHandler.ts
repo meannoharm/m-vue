@@ -14,12 +14,14 @@ export class BaseReactiveHandler implements ProxyHandler<Target> {
     const shallow = this._shallow;
 
     if (key === ReactiveFlags.IS_REACTIVE) {
-      return true;
+      return !isReadonly;
     } else if (key === ReactiveFlags.RAW) {
       // 代理对象通过 raw 属性可以获取到原始对象
       return target;
     } else if (key === ReactiveFlags.IS_READONLY) {
       return isReadonly;
+    } else if (key === ReactiveFlags.IS_SHALLOW) {
+      return shallow;
     }
 
     if (!isReadonly) {

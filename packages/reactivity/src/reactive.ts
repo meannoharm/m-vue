@@ -1,5 +1,10 @@
 import { isObject } from '@m-vue/shared';
-import { mutableHandlers, readonlyHandlers, shallowReactiveHandlers } from './baseHandler';
+import {
+  mutableHandlers,
+  readonlyHandlers,
+  shallowReactiveHandlers,
+  shallowReadonlyHandlers,
+} from './baseHandler';
 import { ReactiveFlags } from './constants';
 
 // 做一次缓存
@@ -56,5 +61,5 @@ export function readonly(target) {
 }
 
 export function shallowReadonly(target) {
-  return createReactive(target, true, readonlyHandlers, reactiveMap);
+  return createReactive(target, true, shallowReadonlyHandlers, reactiveMap);
 }
