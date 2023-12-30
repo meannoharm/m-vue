@@ -1,11 +1,8 @@
+import { TriggerType } from './constants';
+
 export let activeEffect = undefined;
 
 export const ITERATE_KEY = Symbol('iterate');
-export enum TriggerType {
-  ADD = 'add',
-  SET = 'set',
-  DELETE = 'delete',
-}
 
 function cleanupEffect(effect) {
   const { deps } = effect;
