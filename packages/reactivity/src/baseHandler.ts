@@ -1,7 +1,28 @@
 import { type Target, reactive, readonly } from './reactive';
 import { isObject } from '@m-vue/shared';
-import { track, trigger, ITERATE_KEY } from './effect';
-import { ReactiveFlags, TriggerType } from './constants';
+import { track, trigger, pauseTracking, resetTracking, ITERATE_KEY } from './effect';
+import { ReactiveFlags, TriggerOpType } from './constants';
+
+const arrayInstrumentations = {};
+['includes', 'indexOf', 'lastIndexOf'].forEach((method) => {
+  const originMethod = Array.prototype[method];
+  arrayInstrumentations[method] = function (...args) {
+    let res = originMethod.apply(this, args);
+    if (res === -1 || res === false) {
+      res = originMethod.apply(this[ReactiveFlags.RAW], args);
+    }
+    return res;
+  };
+});
+['push', 'pop', 'shift', 'unshift', 'splice'].forEach((method) => {
+  const originMethod = Array.prototype[method];
+  arrayInstrumentations[method] = function (...args) {
+    pauseTracking();
+    const res = originMethod.apply(this, args);
+    resetTracking();
+    return res;
+  };
+});
 
 export class BaseReactiveHandler implements ProxyHandler<Target> {
   constructor(
@@ -24,7 +45,12 @@ export class BaseReactiveHandler implements ProxyHandler<Target> {
       return shallow;
     }
 
-    if (!isReadonly) {
+    // 拦截数组方法，实现依赖收集
+    if (Array.isArray(target) && arrayInstrumentations.hasOwnProperty(key)) {
+      return Reflect.get(arrayInstrumentations, key, receiver);
+    }
+
+    if (!isReadonly && typeof key !== 'symbol') {
       track(target, 'get', key);
     }
 
@@ -48,9 +74,13 @@ export class MutableReactiveHandler extends BaseReactiveHandler {
   }
   set(target, key, value, receiver) {
     const oldValue = target[key];
-    const type = Object.prototype.hasOwnProperty.call(target, key)
-      ? TriggerType.SET
-      : TriggerType.ADD;
+    const type = Array.isArray(target)
+      ? Number(key) < target.length
+        ? TriggerOpType.SET
+        : TriggerOpType.ADD
+      : Object.prototype.hasOwnProperty.call(target, key)
+        ? TriggerOpType.SET
+        : TriggerOpType.ADD;
     const result = Reflect.set(target, key, value, receiver);
     // target === receiver[ReactiveFlags.RAW] 说明 receiver 是 target 的代理对象
     if (target === receiver[ReactiveFlags.RAW]) {
@@ -63,7 +93,7 @@ export class MutableReactiveHandler extends BaseReactiveHandler {
   }
   // 拦截 for ... in
   ownKeys(target) {
-    track(target, 'ownKeys', ITERATE_KEY);
+    track(target, 'ownKeys', Array.isArray(target) ? 'length' : ITERATE_KEY);
     return Reflect.ownKeys(target);
   }
   // 拦截 delete
@@ -72,7 +102,7 @@ export class MutableReactiveHandler extends BaseReactiveHandler {
     let oldValue = target[key];
     let result = Reflect.deleteProperty(target, key);
     if (hasKey) {
-      trigger(target, TriggerType.DELETE, key, undefined, oldValue);
+      trigger(target, TriggerOpType.DELETE, key, undefined, oldValue);
     }
     return result;
   }

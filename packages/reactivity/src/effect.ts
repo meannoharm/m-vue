@@ -1,4 +1,4 @@
-import { TriggerType } from './constants';
+import { TriggerOpType } from './constants';
 
 export let activeEffect = undefined;
 
@@ -61,9 +61,17 @@ export const effect = (fn, options = {}) => {
   return runner;
 };
 
+export let shouldTrack = true;
+export function pauseTracking() {
+  shouldTrack = false;
+}
+export function resetTracking() {
+  shouldTrack = true;
+}
+
 const targetMap = new WeakMap();
 export const track = (target, type, key) => {
-  if (!activeEffect) return;
+  if (!activeEffect || !shouldTrack) return;
   let depsMap = targetMap.get(target);
   if (!depsMap) {
     targetMap.set(target, (depsMap = new Map()));
@@ -89,22 +97,45 @@ export const trackEffects = (dep) => {
 export const trigger = (target, type, key, newValue, oldValue) => {
   const depsMap = targetMap.get(target);
   if (!depsMap) return;
-  const effects = depsMap.get(key);
-  const iterateEffects = depsMap.get(ITERATE_KEY);
 
   const effectsToRun = new Set();
+
+  const effects = depsMap.get(key);
   // 将与key相关的effect添加到effectsToRun
-  effects &&
+  if (effects) {
     effects.forEach((effect) => {
       effectsToRun.add(effect);
     });
+  }
 
-  if (type === TriggerType.ADD || type === TriggerType.DELETE) {
+  const iterateEffects = depsMap.get(ITERATE_KEY);
+  if (type === TriggerOpType.ADD || type === TriggerOpType.DELETE) {
     // 将与ITERATE_KEY相关的effect添加到effectsToRun
-    iterateEffects &&
+    if (iterateEffects) {
       iterateEffects.forEach((effect) => {
         effectsToRun.add(effect);
       });
+    }
+  }
+
+  if (type === TriggerOpType.ADD && Array.isArray(target)) {
+    // 如果是数组，且新增的是索引，需要触发length属性的effect
+    const lengthEffect = depsMap.get('length');
+    if (lengthEffect) {
+      lengthEffect.forEach((effect) => {
+        effectsToRun.add(effect);
+      });
+    }
+  }
+
+  if (Array.isArray(target) && key === 'length') {
+    // 对于索引大于或等于新的 length 值的元素
+    // 需要把所有相关联的副作用函数取出并添加到 effectsToRun 中待执行
+    depsMap.forEach((effects, index) => {
+      if (index >= newValue) {
+        effectsToRun.add(effects);
+      }
+    });
   }
 
   triggerEffect(effectsToRun);

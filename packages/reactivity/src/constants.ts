@@ -5,7 +5,7 @@ export const enum ReactiveFlags {
   IS_SHALLOW = '__v_isShallow',
 }
 
-export enum TriggerType {
+export enum TriggerOpType {
   ADD = 'add',
   SET = 'set',
   DELETE = 'delete',
