@@ -63,3 +63,7 @@ export function readonly(target) {
 export function shallowReadonly(target) {
   return createReactive(target, true, shallowReadonlyHandlers, reactiveMap);
 }
+
+export function toRaw<T>(observed: T): T {
+  return (observed && toRaw(observed[ReactiveFlags.RAW])) || observed;
+}

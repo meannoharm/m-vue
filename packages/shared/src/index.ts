@@ -1,20 +1,24 @@
 export const isObject = (value) => {
-  return typeof value === "object" && value !== null;
+  return typeof value === 'object' && value !== null;
 };
 
 export const isString = (value) => {
-  return typeof value === "string";
+  return typeof value === 'string';
 };
 
 export const isNumber = (value) => {
-  return typeof value === "number";
+  return typeof value === 'number';
 };
 
 export const isFunction = (value) => {
-  return typeof value === "function";
+  return typeof value === 'function';
 };
 
 export const isArray = Array.isArray;
+
+export const isMap = (value: any) => {
+  return Object.prototype.toString.call(value) === '[object Map]';
+};
 
 export const assign = Object.assign;
 

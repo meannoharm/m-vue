@@ -1,4 +1,4 @@
-import { type Target, reactive, readonly } from './reactive';
+import { type Target, reactive, readonly, toRaw } from './reactive';
 import { isObject } from '@m-vue/shared';
 import { track, trigger, pauseTracking, resetTracking, ITERATE_KEY } from './effect';
 import { ReactiveFlags, TriggerOpType } from './constants';
@@ -83,7 +83,7 @@ export class MutableReactiveHandler extends BaseReactiveHandler {
         : TriggerOpType.ADD;
     const result = Reflect.set(target, key, value, receiver);
     // target === receiver[ReactiveFlags.RAW] 说明 receiver 是 target 的代理对象
-    if (target === receiver[ReactiveFlags.RAW]) {
+    if (target === toRaw(receiver)) {
       // 因为 NaN !== NaN 所以需要判断一下
       if (oldValue !== value && (oldValue === oldValue || value === value)) {
         trigger(target, type, key, value, oldValue);

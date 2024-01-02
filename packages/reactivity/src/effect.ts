@@ -1,8 +1,10 @@
+import { isMap } from '@m-vue/shared';
 import { TriggerOpType } from './constants';
 
 export let activeEffect = undefined;
 
 export const ITERATE_KEY = Symbol('iterate');
+export const MAP_KEY_ITERATE_KEY = Symbol('Map key iterate');
 
 function cleanupEffect(effect) {
   const { deps } = effect;
@@ -94,7 +96,13 @@ export const trackEffects = (dep) => {
   }
 };
 
-export const trigger = (target, type, key, newValue, oldValue) => {
+export const trigger = (
+  target: object,
+  type,
+  key: unknown,
+  newValue?: unknown,
+  oldValue?: unknown,
+) => {
   const depsMap = targetMap.get(target);
   if (!depsMap) return;
 
@@ -109,7 +117,11 @@ export const trigger = (target, type, key, newValue, oldValue) => {
   }
 
   const iterateEffects = depsMap.get(ITERATE_KEY);
-  if (type === TriggerOpType.ADD || type === TriggerOpType.DELETE) {
+  if (
+    type === TriggerOpType.ADD ||
+    type === TriggerOpType.DELETE ||
+    (type === TriggerOpType.SET && isMap(target))
+  ) {
     // 将与ITERATE_KEY相关的effect添加到effectsToRun
     if (iterateEffects) {
       iterateEffects.forEach((effect) => {
@@ -136,6 +148,15 @@ export const trigger = (target, type, key, newValue, oldValue) => {
         effectsToRun.add(effects);
       }
     });
+  }
+
+  // ADD 和 DELETE 时，触发 MAP_KEY_ITERATE_KEY 相关的 effect
+  // keys() 方法收集时，追踪了 MAP_KEY_ITERATE_KEY
+  if ((type === TriggerOpType.ADD || type === TriggerOpType.DELETE) && isMap(target)) {
+    const iterateEffects = depsMap.get(MAP_KEY_ITERATE_KEY);
+    if (iterateEffects) {
+      effectsToRun.add(iterateEffects);
+    }
   }
 
   triggerEffect(effectsToRun);
