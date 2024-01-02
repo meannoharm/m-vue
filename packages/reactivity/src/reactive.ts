@@ -4,7 +4,13 @@ import {
   readonlyHandlers,
   shallowReactiveHandlers,
   shallowReadonlyHandlers,
-} from './baseHandler';
+} from './baseHandlers';
+import {
+  mutableCollectionHandlers,
+  readonlyCollectionHandlers,
+  shallowCollectionHandlers,
+  shallowReadonlyCollectionHandlers,
+} from './collectionHandlers';
 import { ReactiveFlags } from './constants';
 
 // 做一次缓存
@@ -23,6 +29,7 @@ export const createReactive = (
   target,
   isReadonly: boolean,
   baseHandlers: ProxyHandler<any>,
+  collectionHandlers: ProxyHandler<any>,
   proxyMap: WeakMap<Target, any>,
 ) => {
   if (isObject(target)) {
@@ -49,19 +56,31 @@ export const createReactive = (
 };
 
 export function reactive(target) {
-  return createReactive(target, false, mutableHandlers, reactiveMap);
+  return createReactive(target, false, mutableHandlers, mutableCollectionHandlers, reactiveMap);
 }
 
 export function shallowReactive(target) {
-  return createReactive(target, false, shallowReactiveHandlers, reactiveMap);
+  return createReactive(
+    target,
+    false,
+    shallowReactiveHandlers,
+    shallowCollectionHandlers,
+    reactiveMap,
+  );
 }
 
 export function readonly(target) {
-  return createReactive(target, true, readonlyHandlers, reactiveMap);
+  return createReactive(target, true, readonlyHandlers, readonlyCollectionHandlers, reactiveMap);
 }
 
 export function shallowReadonly(target) {
-  return createReactive(target, true, shallowReadonlyHandlers, reactiveMap);
+  return createReactive(
+    target,
+    true,
+    shallowReadonlyHandlers,
+    shallowReadonlyCollectionHandlers,
+    reactiveMap,
+  );
 }
 
 export function toRaw<T>(observed: T): T {

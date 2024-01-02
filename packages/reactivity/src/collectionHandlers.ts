@@ -119,17 +119,45 @@ function createInstrumentation() {
     set,
     forEach: createForEach(),
   };
+  const shallowInstrumentations: Record<string, Function | number> = {
+    add,
+    delete: deleteEntry,
+    get,
+    set,
+  };
+  const readonlyInstrumentations: Record<string, Function | number> = {
+    get,
+    forEach: createForEach(),
+  };
+  const shallowReadonlyInstrumentations: Record<string, Function | number> = {
+    get,
+  };
 
   ['keys', 'values', 'entries', Symbol.iterator].forEach((method) => {
     mutableInstrumentations[method as string] = createIterableMethod(method);
+    readonlyInstrumentations[method as string] = createIterableMethod(method);
+    shallowInstrumentations[method as string] = createIterableMethod(method);
+    shallowReadonlyInstrumentations[method as string] = createIterableMethod(method);
   });
 
-  return [mutableInstrumentations];
+  return [mutableInstrumentations, readonlyInstrumentations, shallowInstrumentations];
 }
 
-const [mutableInstrumentations] = createInstrumentation();
+const [
+  mutableInstrumentations,
+  readonlyInstrumentations,
+  shallowInstrumentations,
+  shallowReadonlyInstrumentations,
+] = createInstrumentation();
 
-function createInstrumentationGetter() {
+function createInstrumentationGetter(isReadonly: boolean, isShallow: boolean) {
+  const instrumentations = isReadonly
+    ? isShallow
+      ? shallowReadonlyInstrumentations
+      : readonlyInstrumentations
+    : isShallow
+      ? shallowInstrumentations
+      : mutableInstrumentations;
   return function (target, key, receiver) {
     if (key === ReactiveFlags.RAW) {
       return target;
@@ -138,10 +166,22 @@ function createInstrumentationGetter() {
       track(target, 'get', ITERATE_KEY);
       return Reflect.get(target, key, target);
     }
-    return mutableInstrumentations[key];
+    return instrumentations[key];
   };
 }
 
 export const mutableCollectionHandlers: ProxyHandler<SetTypes | MapTypes> = {
-  get: createInstrumentationGetter(),
+  get: createInstrumentationGetter(false, false),
+};
+
+export const shallowCollectionHandlers: ProxyHandler<SetTypes | MapTypes> = {
+  get: createInstrumentationGetter(false, true),
+};
+
+export const readonlyCollectionHandlers: ProxyHandler<SetTypes | MapTypes> = {
+  get: createInstrumentationGetter(true, false),
+};
+
+export const shallowReadonlyCollectionHandlers: ProxyHandler<SetTypes | MapTypes> = {
+  get: createInstrumentationGetter(true, true),
 };

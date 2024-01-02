@@ -16,10 +16,6 @@ export const isFunction = (value) => {
 
 export const isArray = Array.isArray;
 
-export const isMap = (value: any) => {
-  return Object.prototype.toString.call(value) === '[object Map]';
-};
-
 export const assign = Object.assign;
 
 export const enum ShapeFlags {
@@ -35,3 +31,14 @@ export const enum ShapeFlags {
   COMPONENT_KEPT_ALIVE = 1 << 9,
   COMPONENT = ShapeFlags.STATEFUL_COMPONENT | ShapeFlags.FUNCTIONAL_COMPONENT,
 }
+
+export const objectToString = Object.prototype.toString;
+export const toTypeString = (value: unknown): string => objectToString.call(value);
+
+export const toRawType = (value: unknown): string => {
+  return toTypeString(value).slice(8, -1);
+};
+
+export const isMap = (value: any) => {
+  return toTypeString(value) === 'Map';
+};
