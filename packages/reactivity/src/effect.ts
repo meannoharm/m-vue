@@ -53,7 +53,11 @@ export class ReactiveEffect {
   }
 }
 
-export const effect = (fn, options = {}) => {
+interface ReactiveEffectOptions {
+  scheduler?: Function;
+}
+
+export const effect = (fn, options: ReactiveEffectOptions = {}) => {
   const _effect = new ReactiveEffect(fn, options.scheduler);
 
   _effect.run();
