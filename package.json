@@ -7,8 +7,7 @@
   "scripts": {
     "dev": "node scripts/dev.js",
     "build": "rollup -c",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "test": "vest"
   },
   "repository": {
     "type": "git",
@@ -26,12 +25,12 @@
     "@rollup/plugin-node-resolve": "^8.1.0",
     "@rollup/plugin-replace": "^2.3.3",
     "@rollup/plugin-typescript": "^8.2.5",
-    "jest": "^29.7.0",
     "prettier": "^3.1.1",
     "rollup": "^2.17.1",
     "rollup-plugin-sourcemaps": "^0.6.2",
     "tslib": "^2.3.1",
-    "typescript": "^4.7.3"
+    "typescript": "^4.7.3",
+    "vitest": "^0.22.1"
   },
   "dependencies": {
     "esbuild": "^0.19.11",

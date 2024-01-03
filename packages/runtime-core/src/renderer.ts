@@ -1,5 +1,5 @@
-import { isString, ShapeFlags } from "@m-vue/shared";
-import { createVnode, isSameVnode, Text } from "./vnode";
+import { isString, ShapeFlags } from '@m-vue/shared';
+import { createVnode, isSameVnode, Text } from './vnode';
 
 export function createRenderer(renderOptions) {
   let {
@@ -35,7 +35,7 @@ export function createRenderer(renderOptions) {
     let el = (vnode.el = hostCreateElement(type));
     if (props) {
       for (let key in props) {
-        hostPatchProp(el, key, props[key]);
+        hostPatchProp(el, key, null, props[key]);
       }
     }
     if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
@@ -52,7 +52,7 @@ export function createRenderer(renderOptions) {
       hostInsert((n2.el = hostCreateText(n2.children)), container);
     } else {
       // 文本变化，节点不变
-      const el = n2.el = n1.el;
+      const el = (n2.el = n1.el);
       if (n1.children !== n2.children) {
         // 更新文本
         hostSetText(el, n2.children);
@@ -60,28 +60,45 @@ export function createRenderer(renderOptions) {
     }
   };
 
-  const patchProps = (oldProps, newProps, container) => {
-    
-  }
+  const patchProps = (oldProps, newProps, el) => {
+    for (let key in newProps) {
+      hostPatchProp(el, key, oldProps[key], newProps[key]);
+    }
 
-  const patchElement = (n1, n2, container) => {
+    for (let key in oldProps) {
+      if (!newProps.hasOwnProperty(key)) {
+        hostPatchProp(el, key, oldProps[key], null);
+      }
+    }
+  };
+
+  const patchChildren = (n1, n2, el) => {
+    const c1 = n1 && n1.children;
+    const c2 = n2 && n2.children;
+
+    // 文本 null 数组
+  };
+
+  const patchElement = (n1, n2) => {
     // 先复用节点
     // 再比较属性
     // 再比较儿子
-    let el = n2.el = n1.el;
+    let el = (n2.el = n1.el);
 
     let oldProps = n1.props || {};
     let newProps = n2.props || {};
 
-    patchProps(oldProps, newProps, container)
-  }
+    patchProps(oldProps, newProps, el);
+
+    patchChildren(n1, n2, el);
+  };
 
   const processElement = (n1, n2, container) => {
     if (n1 === null) {
       mountElement(n2, container);
     } else {
       // 元素更新
-      patchElement(n1, n2, container)
+      patchElement(n1, n2);
     }
   };
 
@@ -89,7 +106,7 @@ export function createRenderer(renderOptions) {
     if (n1 === n2) return;
 
     // 判断两个元素是否相同，不相同则卸载老的再添加新的
-    if (n1 && !isSameVnode(n1, n2) ) {
+    if (n1 && !isSameVnode(n1, n2)) {
       unmount(n1); // 删除老的
       n1 = null;
     }
