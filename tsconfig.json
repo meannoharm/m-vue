@@ -8,13 +8,10 @@
     "strict": false,
     "resolveJsonModule": true,
     "jsx": "preserve",
-    "lib": [
-      "esnext",
-      "dom"
-    ],
+    "lib": ["esnext", "dom"],
     "baseUrl": ".",
     "paths": {
-      "@m-vue/*": ["packages/*/src"],
+      "@m-vue/*": ["packages/*/src"]
     }
   }
 }
