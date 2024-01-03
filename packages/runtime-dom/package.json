@@ -5,6 +5,10 @@
   "main": "index.js",
   "buildOptions": {
     "name": "VueRuntimeDom",
-    "formats": ["global", "cjs", "esm-bundler"]
+    "formats": [
+      "global",
+      "cjs",
+      "esm-bundler"
+    ]
   }
 }

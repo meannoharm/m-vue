@@ -22,10 +22,10 @@ export function createRenderer(renderOptions) {
     return child;
   };
 
-  const mountChildren = (children, container) => {
+  const mountChildren = (children, el) => {
     for (let i = 0; i < children.length; i++) {
       let child = normalize(children[i]);
-      patch(null, child, container);
+      patch(null, child, el);
     }
   };
 
@@ -72,11 +72,45 @@ export function createRenderer(renderOptions) {
     }
   };
 
-  const patchChildren = (n1, n2, el) => {
-    const c1 = n1 && n1.children;
-    const c2 = n2 && n2.children;
+  const unmountChildren = (children) => {
+    for (let i = 0; i < children.length; i++) {
+      unmount(children[i]);
+    }
+  };
 
-    // 文本 null 数组
+  const patchChildren = (n1, n2, el) => {
+    const c1 = n1.children;
+    const c2 = n2.children;
+    const prevShapeFlag = n1 && n1.shapeFlag;
+    const shapeFlag = n2.shapeFlag;
+
+    if (shapeFlag & ShapeFlags.TEXT_CHILDREN) {
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        unmountChildren(c1);
+      }
+      if (c2 !== c1) {
+        hostSetElementText(el, c2);
+      }
+    } else {
+      if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+        // 两个都是数组
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+          // diff算法
+          // patchKeyChildren(c1, c2, el);
+        } else {
+          // 新的是null
+          unmountChildren(c1);
+        }
+      } else {
+        // 老的是文本或 null，新的是数组或 null
+        if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
+          hostSetElementText(el, '');
+        }
+        if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
+          mountChildren(c2, el);
+        }
+      }
+    }
   };
 
   const patchElement = (n1, n2) => {
@@ -136,7 +170,7 @@ export function createRenderer(renderOptions) {
       }
     } else {
       // 挂载，初始化和更新
-      patch(null, vnode, container);
+      patch(container._vnode || null, vnode, container);
     }
     container._vnode = vnode;
   };

@@ -13,14 +13,13 @@ const pkg = require(resolve(__dirname, `../packages/${target}/package.json`));
 const outputFormat = format.startsWith('global') ? 'iife' : format === 'cjs' ? 'cjs' : 'esm';
 
 const outfile = resolve(__dirname, `../packages/${target}/dist/${target}.${format}.js`);
-
 esbuild
   .context({
     entryPoints: [resolve(__dirname, `../packages/${target}/src/index.js`)],
     outfile,
     bundle: true,
     format: outputFormat,
-    globalName: pkg.buildOption?.name,
+    globalName: pkg.buildOptions?.name,
     platform: format === 'cjs' ? 'node' : 'browser',
   })
   .then((ctx) => {
