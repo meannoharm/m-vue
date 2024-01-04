@@ -1,7 +1,6 @@
-import { isReactive, reactive  } from "../src/reactive";
-
-describe("reactive", () => {
-  test("Object", () => {
+import { reactive, isReactive, toRaw } from '../src/reactive';
+describe('reactive', () => {
+  test('Object', () => {
     const original = { foo: 1 };
     const observed = reactive(original);
     expect(observed).not.toBe(original);
@@ -10,12 +9,12 @@ describe("reactive", () => {
     // get
     expect(observed.foo).toBe(1);
     //     // has
-    expect("foo" in observed).toBe(true);
+    expect('foo' in observed).toBe(true);
     //     // ownKeys
-    expect(Object.keys(observed)).toEqual(["foo"]);
+    expect(Object.keys(observed)).toEqual(['foo']);
   });
 
-  test("nested reactives", () => {
+  test('nested reactives', () => {
     const original = {
       nested: {
         foo: 1,
@@ -28,4 +27,10 @@ describe("reactive", () => {
     expect(isReactive(observed.array[0])).toBe(true);
   });
 
+  test('toRaw', () => {
+    const original = { foo: 1 };
+    const observed = reactive(original);
+    expect(toRaw(observed)).toBe(original);
+    expect(toRaw(original)).toBe(original);
+  });
 });

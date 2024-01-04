@@ -32,7 +32,7 @@ export const createReactive = (
   collectionHandlers: ProxyHandler<any>,
   proxyMap: WeakMap<Target, any>,
 ) => {
-  if (isObject(target)) {
+  if (!isObject(target)) {
     return;
   }
 
@@ -49,7 +49,6 @@ export const createReactive = (
   }
 
   const proxy = new Proxy(target, baseHandlers);
-
   proxyMap.set(target, proxy);
 
   return proxy;
@@ -85,4 +84,12 @@ export function shallowReadonly(target) {
 
 export function toRaw<T>(observed: T): T {
   return (observed && toRaw(observed[ReactiveFlags.RAW])) || observed;
+}
+
+export function isReadonly(value) {
+  return !!value[ReactiveFlags.IS_READONLY];
+}
+
+export function isProxy(value) {
+  return !!value[ReactiveFlags.RAW];
 }

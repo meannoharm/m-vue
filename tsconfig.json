@@ -9,6 +9,7 @@
     "resolveJsonModule": true,
     "jsx": "preserve",
     "lib": ["esnext", "dom"],
+    "types": ["vitest/globals", "node"],
     "baseUrl": ".",
     "paths": {
       "@m-vue/*": ["packages/*/src"]

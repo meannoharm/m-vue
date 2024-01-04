@@ -1,12 +1,14 @@
 import { isMap } from '@m-vue/shared';
 import { TriggerOpType } from './constants';
 
+export type EffectScheduler = (...args: any[]) => any;
+
 export let activeEffect = undefined;
 
 export const ITERATE_KEY = Symbol('iterate');
 export const MAP_KEY_ITERATE_KEY = Symbol('Map key iterate');
 
-function cleanupEffect(effect) {
+function cleanupEffect(effect: ReactiveEffect) {
   const { deps } = effect;
   for (let i = 0; i < deps.length; i++) {
     deps[i].delete(effect);
@@ -21,7 +23,7 @@ export class ReactiveEffect {
   public active = true;
   constructor(
     public fn,
-    public scheduler,
+    public scheduler: EffectScheduler,
   ) {}
 
   // 执行effect
@@ -54,10 +56,10 @@ export class ReactiveEffect {
 }
 
 interface ReactiveEffectOptions {
-  scheduler?: Function;
+  scheduler?: EffectScheduler;
 }
 
-export const effect = (fn, options: ReactiveEffectOptions = {}) => {
+export const effect = (fn: () => any, options: ReactiveEffectOptions = {}) => {
   const _effect = new ReactiveEffect(fn, options.scheduler);
 
   _effect.run();
