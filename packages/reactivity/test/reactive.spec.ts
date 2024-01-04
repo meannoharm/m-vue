@@ -14,6 +14,27 @@ describe('reactive', () => {
     expect(Object.keys(observed)).toEqual(['foo']);
   });
 
+  test('Map', () => {
+    const original = new Map();
+    original.set('foo', 1);
+    const observed = reactive(original);
+    expect(observed).not.toBe(original);
+    expect(isReactive(observed)).toBe(true);
+    expect(isReactive(original)).toBe(false);
+    expect(observed.get('foo')).toBe(1);
+    expect(Array.from(observed.keys())).toEqual(['foo']);
+  });
+
+  test('Set', () => {
+    const original = new Set();
+    original.add(1);
+    const observed = reactive(original);
+    expect(observed).not.toBe(original);
+    expect(isReactive(observed)).toBe(true);
+    expect(isReactive(original)).toBe(false);
+    expect(Array.from(observed.values())).toEqual([1]);
+  });
+
   test('nested reactives', () => {
     const original = {
       nested: {

@@ -1,4 +1,4 @@
-import { isObject } from '@m-vue/shared';
+import { isObject, toRawType } from '@m-vue/shared';
 import {
   mutableHandlers,
   readonlyHandlers,
@@ -12,6 +12,27 @@ import {
   shallowReadonlyCollectionHandlers,
 } from './collectionHandlers';
 import { ReactiveFlags } from './constants';
+
+enum TargetType {
+  INVALID = 0,
+  COMMON = 1,
+  COLLECTION = 2,
+}
+
+function targetTypeMap(rawType: string) {
+  switch (rawType) {
+    case 'Object':
+    case 'Array':
+      return TargetType.COMMON;
+    case 'Map':
+    case 'Set':
+    case 'WeakMap':
+    case 'WeakSet':
+      return TargetType.COLLECTION;
+    default:
+      return TargetType.INVALID;
+  }
+}
 
 // 做一次缓存
 const reactiveMap = new WeakMap();
@@ -47,8 +68,11 @@ export const createReactive = (
     // 同一个对象,直接返回
     return existingProxy;
   }
-
-  const proxy = new Proxy(target, baseHandlers);
+  const targetType = targetTypeMap(toRawType(target));
+  const proxy = new Proxy(
+    target,
+    targetType === TargetType.COLLECTION ? collectionHandlers : baseHandlers,
+  );
   proxyMap.set(target, proxy);
 
   return proxy;
