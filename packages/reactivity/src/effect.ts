@@ -1,5 +1,5 @@
 import { isMap } from '@m-vue/shared';
-import { TriggerOpType } from './constants';
+import { TriggerOpTypes } from './constants';
 
 export type EffectScheduler = (...args: any[]) => any;
 
@@ -124,9 +124,9 @@ export const trigger = (
 
   const iterateEffects = depsMap.get(ITERATE_KEY);
   if (
-    type === TriggerOpType.ADD ||
-    type === TriggerOpType.DELETE ||
-    (type === TriggerOpType.SET && isMap(target))
+    type === TriggerOpTypes.ADD ||
+    type === TriggerOpTypes.DELETE ||
+    (type === TriggerOpTypes.SET && isMap(target))
   ) {
     // 将与ITERATE_KEY相关的effect添加到effectsToRun
     if (iterateEffects) {
@@ -136,7 +136,7 @@ export const trigger = (
     }
   }
 
-  if (type === TriggerOpType.ADD && Array.isArray(target)) {
+  if (type === TriggerOpTypes.ADD && Array.isArray(target)) {
     // 如果是数组，且新增的是索引，需要触发length属性的effect
     const lengthEffect = depsMap.get('length');
     if (lengthEffect) {
@@ -158,7 +158,7 @@ export const trigger = (
 
   // ADD 和 DELETE 时，触发 MAP_KEY_ITERATE_KEY 相关的 effect
   // keys() 方法收集时，追踪了 MAP_KEY_ITERATE_KEY
-  if ((type === TriggerOpType.ADD || type === TriggerOpType.DELETE) && isMap(target)) {
+  if ((type === TriggerOpTypes.ADD || type === TriggerOpTypes.DELETE) && isMap(target)) {
     const iterateEffects = depsMap.get(MAP_KEY_ITERATE_KEY);
     if (iterateEffects) {
       effectsToRun.add(iterateEffects);

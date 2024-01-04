@@ -93,3 +93,11 @@ export function isReadonly(value) {
 export function isProxy(value) {
   return !!value[ReactiveFlags.RAW];
 }
+
+export const toReactive = (value) => {
+  return isObject(value) ? reactive(value) : value;
+};
+
+export const toReadonly = (value) => {
+  return isObject(value) ? readonly(value) : value;
+};

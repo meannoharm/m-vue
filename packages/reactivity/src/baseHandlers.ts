@@ -1,7 +1,7 @@
 import { type Target, reactive, readonly, toRaw } from './reactive';
 import { isObject } from '@m-vue/shared';
 import { track, trigger, pauseTracking, resetTracking, ITERATE_KEY } from './effect';
-import { ReactiveFlags, TriggerOpType } from './constants';
+import { ReactiveFlags, TriggerOpTypes } from './constants';
 
 const arrayInstrumentations = {};
 ['includes', 'indexOf', 'lastIndexOf'].forEach((method) => {
@@ -76,11 +76,11 @@ export class MutableReactiveHandler extends BaseReactiveHandler {
     const oldValue = target[key];
     const type = Array.isArray(target)
       ? Number(key) < target.length
-        ? TriggerOpType.SET
-        : TriggerOpType.ADD
+        ? TriggerOpTypes.SET
+        : TriggerOpTypes.ADD
       : Object.prototype.hasOwnProperty.call(target, key)
-        ? TriggerOpType.SET
-        : TriggerOpType.ADD;
+        ? TriggerOpTypes.SET
+        : TriggerOpTypes.ADD;
     const result = Reflect.set(target, key, value, receiver);
     // target === receiver[ReactiveFlags.RAW] 说明 receiver 是 target 的代理对象
     if (target === toRaw(receiver)) {
@@ -102,7 +102,7 @@ export class MutableReactiveHandler extends BaseReactiveHandler {
     let oldValue = target[key];
     let result = Reflect.deleteProperty(target, key);
     if (hasKey) {
-      trigger(target, TriggerOpType.DELETE, key, undefined, oldValue);
+      trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue);
     }
     return result;
   }
