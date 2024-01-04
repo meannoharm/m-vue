@@ -29,7 +29,7 @@ export function createRenderer(renderOptions) {
     }
   };
 
-  const mountElement = (vnode, container) => {
+  const mountElement = (vnode, container, anchor) => {
     let { type, props, children, shapeFlag } = vnode;
     // 真实元素挂载到虚拟节点
     let el = (vnode.el = hostCreateElement(type));
@@ -44,7 +44,7 @@ export function createRenderer(renderOptions) {
     } else if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
       mountChildren(children, el);
     }
-    hostInsert(el, container);
+    hostInsert(el, container, anchor);
   };
 
   const processText = (n1, n2, container) => {
@@ -60,14 +60,14 @@ export function createRenderer(renderOptions) {
     }
   };
 
-  const patchProps = (oldProps, newProps, el) => {
+  const patchProps = (oldProps, newProps, container) => {
     for (let key in newProps) {
-      hostPatchProp(el, key, oldProps[key], newProps[key]);
+      hostPatchProp(container, key, oldProps[key], newProps[key]);
     }
 
     for (let key in oldProps) {
       if (!newProps.hasOwnProperty(key)) {
-        hostPatchProp(el, key, oldProps[key], null);
+        hostPatchProp(container, key, oldProps[key], undefined);
       }
     }
   };
@@ -78,7 +78,102 @@ export function createRenderer(renderOptions) {
     }
   };
 
-  const patchChildren = (n1, n2, el) => {
+  const patchKeyedChildren = (c1, c2, container) => {
+    let i = 0;
+    let e1 = c1.length - 1;
+    let e2 = c2.length - 1;
+
+    // sync from start
+    while (i <= e1 && i <= e2) {
+      const n1 = c1[i];
+      const n2 = c2[i];
+      if (isSameVnode(n1, n2)) {
+        patch(n1, n2, container);
+      } else {
+        break;
+      }
+      i++;
+    }
+
+    // sync from end
+    while (i <= e1 && i <= e2) {
+      const n1 = c1[e1];
+      const n2 = c2[e2];
+      if (isSameVnode(n1, n2)) {
+        patch(n1, n2, container);
+      } else {
+        break;
+      }
+      e1--;
+      e2--;
+    }
+
+    // common sequence + mount
+    // i 比 e1 大，说明老的比新的少，需要挂载新的
+    // i 和 e2 之间的就是新增部分
+    if (i > e1) {
+      if (i <= e2) {
+        while (i <= e2) {
+          const nextPos = e2 + 1;
+          const anchor = nextPos < c2.length ? c2[nextPos].el : null;
+          patch(null, c2[i], container, anchor);
+          i++;
+        }
+      }
+    }
+
+    // common sequence + unmount
+    // i 比 e2 大，说明新的比老的少，需要卸载老的
+    // i 和 e1 之间的就是需要卸载的
+    else if (i > e2) {
+      while (i <= e1) {
+        unmount(c1[i]);
+        i++;
+      }
+    }
+
+    // 乱序对比
+    let s1 = i;
+    let s2 = i;
+
+    const keyToNewIndexMap = new Map();
+    for (let i = s2; i <= e2; i++) {
+      const childVNode = c2[i];
+      keyToNewIndexMap.set(childVNode.key, i);
+    }
+
+    const toBePatched = e2 - s2 + 1; // 新元素总个数
+    const newIndexToOldIndexMap = new Array(toBePatched).fill(0); // 用来标记有没有被patch过
+    for (let i = s1; i <= e1; i++) {
+      const oldChild = c1[i];
+      const newIndex = keyToNewIndexMap.get(oldChild.key);
+      if (newIndex === undefined) {
+        // 老的有，新的没有，删除老的
+        unmount(oldChild);
+      } else {
+        // 标记已经被patch过
+        newIndexToOldIndexMap[newIndex - s2] = i + 1;
+        // 老的有，新的也有，更新
+        patch(oldChild, c2[newIndex], container);
+      }
+    }
+
+    // 创建新的并移动位置
+    for (let i = toBePatched - 1; i >= 0; i--) {
+      const index = s2 + i;
+      const current = c2[index];
+      const anchor = index + 1 < c2.length ? c2[index + 1].el : null;
+      if (newIndexToOldIndexMap[i] === 0) {
+        // 新增的元素
+        patch(null, current, container, anchor);
+      } else {
+        // 移动元素
+        hostInsert(current.el, container, anchor);
+      }
+    }
+  };
+
+  const patchChildren = (n1, n2, container) => {
     const c1 = n1.children;
     const c2 = n2.children;
     const prevShapeFlag = n1 && n1.shapeFlag;
@@ -89,14 +184,14 @@ export function createRenderer(renderOptions) {
         unmountChildren(c1);
       }
       if (c2 !== c1) {
-        hostSetElementText(el, c2);
+        hostSetElementText(container, c2);
       }
     } else {
       if (prevShapeFlag & ShapeFlags.ARRAY_CHILDREN) {
         // 两个都是数组
         if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
           // diff算法
-          // patchKeyChildren(c1, c2, el);
+          patchKeyedChildren(c1, c2, container); // 全量更新
         } else {
           // 新的是null
           unmountChildren(c1);
@@ -104,10 +199,10 @@ export function createRenderer(renderOptions) {
       } else {
         // 老的是文本或 null，新的是数组或 null
         if (prevShapeFlag & ShapeFlags.TEXT_CHILDREN) {
-          hostSetElementText(el, '');
+          hostSetElementText(container, '');
         }
         if (shapeFlag & ShapeFlags.ARRAY_CHILDREN) {
-          mountChildren(c2, el);
+          mountChildren(c2, container);
         }
       }
     }
@@ -127,16 +222,16 @@ export function createRenderer(renderOptions) {
     patchChildren(n1, n2, el);
   };
 
-  const processElement = (n1, n2, container) => {
+  const processElement = (n1, n2, container, anchor) => {
     if (n1 === null) {
-      mountElement(n2, container);
+      mountElement(n2, container, anchor);
     } else {
       // 元素更新
       patchElement(n1, n2);
     }
   };
 
-  const patch = (n1, n2, container) => {
+  const patch = (n1, n2, container, anchor = null) => {
     if (n1 === n2) return;
 
     // 判断两个元素是否相同，不相同则卸载老的再添加新的
@@ -153,7 +248,7 @@ export function createRenderer(renderOptions) {
         break;
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
-          processElement(n1, n2, container);
+          processElement(n1, n2, container, anchor);
         }
     }
   };
