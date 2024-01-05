@@ -1,7 +1,9 @@
-import { isString, ShapeFlags } from '@m-vue/shared';
+import { hasOwn, isNumber, isString, ShapeFlags } from '@m-vue/shared';
 import { createVnode, Fragment, isSameVnode, Text } from './vnode';
 import { reactive, ReactiveEffect } from '@m-vue/reactivity';
 import { queueJob } from './scheduler';
+import { initProps } from './componentProps';
+import { createComponentInstance, setupComponent } from './component';
 
 export function createRenderer(renderOptions) {
   let {
@@ -18,7 +20,7 @@ export function createRenderer(renderOptions) {
   } = renderOptions;
 
   const normalize = (child) => {
-    if (isString(child)) {
+    if (isString(child) || isNumber(child)) {
       return createVnode(Text, null, child);
     }
     return child;
@@ -250,37 +252,35 @@ export function createRenderer(renderOptions) {
     }
   };
 
-  const mountComponent = (vnode, container, anchor) => {
-    const { data = () => ({}), render } = vnode.type;
-    // 组件状态
-    const state = reactive(data());
-
-    const instance = {
-      state,
-      vnode, // 组件的虚拟节点
-      subTree: null, // 渲染的组件内容
-      isMounted: false,
-      update: null,
-    };
+  function setupRenderEffect(instance, container, anchor) {
+    const { render } = instance;
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
         // 初始化
-        const usbTree = render.call(state);
+        const usbTree = render.call(instance.proxy);
         patch(null, usbTree, container, anchor);
         instance.subTree = usbTree;
         instance.isMounted = true;
       } else {
         // 更新
-        const subTree = render.call(state);
+        const subTree = render.call(instance.proxy);
         patch(instance.subTree, subTree, container, anchor);
         instance.subTree = subTree;
       }
     };
 
     const effect = new ReactiveEffect(componentUpdateFn, () => queueJob(instance.update));
-    effect.run();
+    const update = (instance.update = effect.run.bind(effect));
+    update();
+  }
 
-    let update = (instance.update = effect.run.bind(effect));
+  const mountComponent = (vnode, container, anchor) => {
+    // 1. 创建组件实例
+    const instance = (vnode.component = createComponentInstance(vnode));
+    // 2. 给实例初始化赋值
+    setupComponent(instance);
+    // 3. 创建 effect
+    setupRenderEffect(instance, container, anchor);
   };
 
   const processComponent = (n1, n2, container, anchor) => {
