@@ -144,6 +144,7 @@ export function createRenderer(renderOptions) {
 
     const toBePatched = e2 - s2 + 1; // 新元素总个数
     const newIndexToOldIndexMap = new Array(toBePatched).fill(0); // 用来标记有没有被patch过
+
     for (let i = s1; i <= e1; i++) {
       const oldChild = c1[i];
       const newIndex = keyToNewIndexMap.get(oldChild.key);
@@ -158,6 +159,10 @@ export function createRenderer(renderOptions) {
       }
     }
 
+    // 获取最长递增子序列
+    const increasingNewIndexSequence = getSequence(newIndexToOldIndexMap);
+    let j = increasingNewIndexSequence.length - 1;
+
     // 创建新的并移动位置
     for (let i = toBePatched - 1; i >= 0; i--) {
       const index = s2 + i;
@@ -167,8 +172,12 @@ export function createRenderer(renderOptions) {
         // 新增的元素
         patch(null, current, container, anchor);
       } else {
-        // 移动元素
-        hostInsert(current.el, container, anchor);
+        if (i !== increasingNewIndexSequence[j]) {
+          // 移动元素
+          hostInsert(current.el, container, anchor);
+        } else {
+          j--;
+        }
       }
     }
   };
@@ -272,4 +281,57 @@ export function createRenderer(renderOptions) {
   return {
     render,
   };
+}
+
+// 1. 当前项比最后一项大，直接push
+// 2. 当前项比最后一项小，二分查找，找到第一个比当前项大的项，替换
+function getSequence(arr: number[]): number[] {
+  const len = arr.length;
+  // 记录最长递增子序列的索引
+  const result = [0];
+  // 标记索引
+  const p = new Array(len);
+  let start;
+  let end;
+  let resultLastIndex = 0;
+
+  for (let i = 0; i < len; i++) {
+    let arrI = arr[i];
+    if (arrI !== 0) {
+      resultLastIndex = result[result.length - 1];
+
+      if (arr[resultLastIndex] < arrI) {
+        result.push(i);
+        p[i] = resultLastIndex;
+        continue;
+      }
+
+      start = 0;
+      end = result.length - 1;
+
+      while (start < end) {
+        let mid = (start + end) >> 1;
+        if (arr[result[mid]] < arrI) {
+          start = mid + 1;
+        } else {
+          end = mid;
+        }
+      }
+
+      if (arr[result[start]] > arrI) {
+        result[start] = i;
+        p[i] = result[start - 1];
+      }
+    }
+  }
+
+  // 回溯
+  let i = result.length;
+  let last = result[i - 1];
+  while (i-- > 0) {
+    result[i] = last;
+    last = p[last];
+  }
+
+  return result;
 }
