@@ -1,6 +1,7 @@
-import { isString, ShapeFlags, isArray } from "@m-vue/shared";
+import { isString, ShapeFlags, isArray, isObject } from '@m-vue/shared';
 
-export const Text = Symbol("Text");
+export const Text = Symbol('Text');
+export const Fragment = Symbol('Fragment');
 
 export function isVnode(value) {
   return !!(value && value.__v_isVnode);
@@ -14,14 +15,18 @@ export function isSameVnode(n1, n2) {
 
 export function createVnode(type, props, children = null) {
   // 组合方案 shapeFlag
-  let shapeFlag = isString(type) ? ShapeFlags.ELEMENT : 0;
+  let shapeFlag = isString(type)
+    ? ShapeFlags.ELEMENT
+    : isObject(type)
+      ? ShapeFlags.STATEFUL_COMPONENT
+      : 0;
 
   const vnode = {
     type,
     props,
     children,
     el: null, // 对应的真实节点
-    key: props?.["key"],
+    key: props?.['key'],
     __v_isVnode: true,
     shapeFlag,
   };

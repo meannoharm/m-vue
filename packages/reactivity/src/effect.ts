@@ -23,7 +23,7 @@ export class ReactiveEffect {
   public active = true;
   constructor(
     public fn,
-    public scheduler: EffectScheduler,
+    public scheduler?: EffectScheduler,
   ) {}
 
   // 执行effect

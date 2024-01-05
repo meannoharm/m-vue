@@ -1,5 +1,7 @@
 import { isString, ShapeFlags } from '@m-vue/shared';
-import { createVnode, isSameVnode, Text } from './vnode';
+import { createVnode, Fragment, isSameVnode, Text } from './vnode';
+import { reactive, ReactiveEffect } from '@m-vue/reactivity';
+import { queueJob } from './scheduler';
 
 export function createRenderer(renderOptions) {
   let {
@@ -240,6 +242,55 @@ export function createRenderer(renderOptions) {
     }
   };
 
+  const processFragment = (n1, n2, container) => {
+    if (n1 === null) {
+      mountChildren(n2.children, container);
+    } else {
+      patchChildren(n1, n2, container);
+    }
+  };
+
+  const mountComponent = (vnode, container, anchor) => {
+    const { data = () => ({}), render } = vnode.type;
+    // 组件状态
+    const state = reactive(data());
+
+    const instance = {
+      state,
+      vnode, // 组件的虚拟节点
+      subTree: null, // 渲染的组件内容
+      isMounted: false,
+      update: null,
+    };
+    const componentUpdateFn = () => {
+      if (!instance.isMounted) {
+        // 初始化
+        const usbTree = render.call(state);
+        patch(null, usbTree, container, anchor);
+        instance.subTree = usbTree;
+        instance.isMounted = true;
+      } else {
+        // 更新
+        const subTree = render.call(state);
+        patch(instance.subTree, subTree, container, anchor);
+        instance.subTree = subTree;
+      }
+    };
+
+    const effect = new ReactiveEffect(componentUpdateFn, () => queueJob(instance.update));
+    effect.run();
+
+    let update = (instance.update = effect.run.bind(effect));
+  };
+
+  const processComponent = (n1, n2, container, anchor) => {
+    if (n1 === null) {
+      mountComponent(n2, container, anchor);
+    } else {
+      // updateComponent(n1, n2, container);
+    }
+  };
+
   const patch = (n1, n2, container, anchor = null) => {
     if (n1 === n2) return;
 
@@ -255,9 +306,14 @@ export function createRenderer(renderOptions) {
       case Text:
         processText(n1, n2, container);
         break;
+      case Fragment:
+        processFragment(n1, n2, container);
+        break;
       default:
         if (shapeFlag & ShapeFlags.ELEMENT) {
           processElement(n1, n2, container, anchor);
+        } else if (shapeFlag & ShapeFlags.COMPONENT) {
+          processComponent(n1, n2, container, anchor);
         }
     }
   };
