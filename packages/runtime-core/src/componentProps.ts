@@ -22,3 +22,31 @@ export function initProps(instance, rawProps) {
   instance.props = shallowReactive(props);
   instance.attrs = attrs;
 }
+
+const hasPropsChanged = (prevProps = {}, nextProps = {}) => {
+  const nextKeys = Object.keys(nextProps);
+  const prevKeys = Object.keys(prevProps);
+
+  if (nextKeys.length !== prevKeys.length) return true;
+
+  for (let i = 0; i < nextKeys.length; i++) {
+    const key = nextKeys[i];
+    if (nextProps[key] !== prevProps[key]) return true;
+  }
+
+  return false;
+};
+
+export function updateProps(instance, prevProps, nextProps) {
+  if (hasPropsChanged(prevProps, nextProps)) {
+    for (const key in nextProps) {
+      // 触发effect
+      instance.props[key] = nextProps[key];
+    }
+    for (const key in instance.props) {
+      if (!hasOwn(nextProps, key)) {
+        delete instance.props[key];
+      }
+    }
+  }
+}

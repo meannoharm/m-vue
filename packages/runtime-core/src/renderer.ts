@@ -2,7 +2,7 @@ import { hasOwn, isNumber, isString, ShapeFlags } from '@m-vue/shared';
 import { createVnode, Fragment, isSameVnode, Text } from './vnode';
 import { reactive, ReactiveEffect } from '@m-vue/reactivity';
 import { queueJob } from './scheduler';
-import { initProps } from './componentProps';
+import { initProps, updateProps } from './componentProps';
 import { createComponentInstance, setupComponent } from './component';
 
 export function createRenderer(renderOptions) {
@@ -283,11 +283,21 @@ export function createRenderer(renderOptions) {
     setupRenderEffect(instance, container, anchor);
   };
 
+  const updateComponent = (n1, n2, container) => {
+    // instance.props 是响应式的，可以修改；属性的更新会导致视图更新
+    // 对于组件，复用的是实例
+    const instance = (n2.component = n1.component);
+    const { props: prevProps } = n1;
+    const { props: nextProps } = n2;
+
+    updateProps(instance, prevProps, nextProps);
+  };
+
   const processComponent = (n1, n2, container, anchor) => {
     if (n1 === null) {
       mountComponent(n2, container, anchor);
     } else {
-      // updateComponent(n1, n2, container);
+      updateComponent(n1, n2, container);
     }
   };
 
