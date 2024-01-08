@@ -1,6 +1,6 @@
-import { hasOwn, isFunction } from '@m-vue/shared';
+import { hasOwn, isFunction, isObject } from '@m-vue/shared';
 import { initProps } from './componentProps';
-import { reactive } from '@m-vue/reactivity';
+import { reactive, proxyRefs } from '@m-vue/reactivity';
 
 export function createComponentInstance(vnode) {
   const instance = {
@@ -14,6 +14,7 @@ export function createComponentInstance(vnode) {
     attrs: {},
     proxy: null,
     render: null,
+    setupState: {},
   };
   return instance;
 }
@@ -24,9 +25,11 @@ const publicPropertiesMap = {
 
 const publicInstanceProxyHandlers = {
   get(target, key) {
-    const { data, props } = target;
+    const { data, props, setupState } = target;
     if (data && hasOwn(data, key)) {
       return data[key];
+    } else if (hasOwn(setupState, key)) {
+      return setupState[key];
     } else if (props && hasOwn(props, key)) {
       return props[key];
     }
@@ -36,9 +39,12 @@ const publicInstanceProxyHandlers = {
     }
   },
   set(target, key, value) {
-    const { data, props } = target;
+    const { data, props, setupState } = target;
     if (data && hasOwn(data, key)) {
       data[key] = value;
+      return true;
+    } else if (hasOwn(setupState, key)) {
+      setupState[key] = value;
       return true;
     } else if (props && hasOwn(props, key)) {
       console.warn('attempting to mutate prop "' + key + '"');
@@ -61,6 +67,19 @@ export function setupComponent(instance) {
     }
     instance.data = reactive(data.call(instance.proxy));
   }
-
-  instance.render = type.render;
+  const { setup } = type;
+  if (setup) {
+    const setupContext = {};
+    const setupResult = setup(instance.props, setupContext);
+    if (isFunction(setupResult)) {
+      instance.render = setupResult;
+    } else if (isObject(setupResult)) {
+      // 对内部 ref 去 value
+      instance.setupState = proxyRefs(setupResult);
+    }
+  }
+  if (!instance.render) {
+    instance.render = type.render;
+  }
+  // instance.render = type.render;
 }
