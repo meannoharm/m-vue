@@ -10,7 +10,8 @@ export function initProps(instance, rawProps) {
   if (rawProps) {
     for (let key in rawProps) {
       const value = rawProps[key];
-      if (hasOwn(options, key)) {
+      // 如果以on开头，则认为是组件自定义事件，也要放到props中
+      if (hasOwn(options, key) || key.startsWith('on')) {
         props[key] = value;
       } else {
         // attrs

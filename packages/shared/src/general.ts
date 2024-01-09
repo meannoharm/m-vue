@@ -33,6 +33,12 @@ export const hasOwnProperty = Object.prototype.hasOwnProperty;
 export const hasOwn = (val: object, key: string | symbol): key is keyof typeof val =>
   hasOwnProperty.call(val, key);
 
+// 把烤肉串命名方式转换成驼峰命名方式
+const camelizeRE = /-(\w)/g;
+export const camelize = (str: string): string => {
+  return str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ''));
+};
+
 // 首字母大写
 export const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 

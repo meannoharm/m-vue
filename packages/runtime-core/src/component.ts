@@ -1,5 +1,8 @@
-import { hasOwn, isFunction, isObject } from '@m-vue/shared';
+import { isFunction, isObject } from '@m-vue/shared';
+import { publicInstanceProxyHandlers } from './componentPublicInstance';
 import { initProps } from './componentProps';
+import { initSlots } from './componentSlots';
+import { emit } from './componentEmits';
 import { reactive, proxyRefs } from '@m-vue/reactivity';
 
 export function createComponentInstance(vnode) {
@@ -14,62 +17,35 @@ export function createComponentInstance(vnode) {
     attrs: {},
     proxy: null,
     render: null,
+    // setup 返回的data
     setupState: {},
+    emit: () => {},
+    slots: {},
   };
+
+  instance.emit = emit.bind(null, instance);
+
   return instance;
 }
 
-const publicPropertiesMap = {
-  $attrs: (i) => i.attrs,
-};
-
-const publicInstanceProxyHandlers = {
-  get(target, key) {
-    const { data, props, setupState } = target;
-    if (data && hasOwn(data, key)) {
-      return data[key];
-    } else if (hasOwn(setupState, key)) {
-      return setupState[key];
-    } else if (props && hasOwn(props, key)) {
-      return props[key];
-    }
-    let getter = publicPropertiesMap[key];
-    if (getter) {
-      return getter(target);
-    }
-  },
-  set(target, key, value) {
-    const { data, props, setupState } = target;
-    if (data && hasOwn(data, key)) {
-      data[key] = value;
-      return true;
-    } else if (hasOwn(setupState, key)) {
-      setupState[key] = value;
-      return true;
-    } else if (props && hasOwn(props, key)) {
-      console.warn('attempting to mutate prop "' + key + '"');
-      return false;
-    }
-    return true;
-  },
-};
-
 export function setupComponent(instance) {
-  const { props, type } = instance.vnode;
+  const { props, type, children } = instance.vnode;
+  const Component = type;
   initProps(instance, props);
+  initSlots(instance, children);
   // 代理组件渲染上下文
   instance.proxy = new Proxy(instance, publicInstanceProxyHandlers);
 
-  const data = type.data;
+  const data = Component.data;
   if (data) {
     if (!isFunction(data)) {
       console.warn('data must be a function');
     }
     instance.data = reactive(data.call(instance.proxy));
   }
-  const { setup } = type;
+  const { setup } = Component;
   if (setup) {
-    const setupContext = {};
+    const setupContext = createSetupContext(instance);
     const setupResult = setup(instance.props, setupContext);
     if (isFunction(setupResult)) {
       instance.render = setupResult;
@@ -79,7 +55,16 @@ export function setupComponent(instance) {
     }
   }
   if (!instance.render) {
-    instance.render = type.render;
+    instance.render = Component.render;
   }
-  // instance.render = type.render;
+}
+
+function createSetupContext(instance) {
+  console.log('初始化 setup context');
+  return {
+    attrs: instance.attrs,
+    slots: instance.slots,
+    emit: instance.emit,
+    expose: () => {}, // TODO 实现 expose 函数逻辑
+  };
 }
