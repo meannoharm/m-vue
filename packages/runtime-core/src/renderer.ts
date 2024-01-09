@@ -150,6 +150,7 @@ export function createRenderer(renderOptions) {
     const toBePatched = e2 - s2 + 1; // 新元素总个数
     const newIndexToOldIndexMap = new Array(toBePatched).fill(0); // 用来标记有没有被patch过
 
+    // 遍历老孩子数组
     for (let i = s1; i <= e1; i++) {
       const oldChild = c1[i];
       const newIndex = keyToNewIndexMap.get(oldChild.key);
