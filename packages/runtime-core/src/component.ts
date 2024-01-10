@@ -11,7 +11,8 @@ export function createComponentInstance(vnode) {
     data: null,
     vnode, // 组件的虚拟节点
     subTree: null, // 渲染的组件内容
-    update: null,
+    effect: null,
+    update: null, // 组件的effect函数，用于更新组件
     propsOptions: vnode.type.props,
     props: {},
     attrs: {},

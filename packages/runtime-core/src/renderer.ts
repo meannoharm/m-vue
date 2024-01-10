@@ -300,7 +300,9 @@ export function createRenderer(renderOptions) {
       }
     };
 
-    const effect = new ReactiveEffect(componentUpdateFn, () => queueJob(instance.update));
+    const effect = (instance.effect = new ReactiveEffect(componentUpdateFn, () =>
+      queueJob(instance.update),
+    ));
     const update = (instance.update = effect.run.bind(effect));
     update();
   }
@@ -373,8 +375,30 @@ export function createRenderer(renderOptions) {
     }
   };
 
+  const unmountComponent = (instance) => {
+    const { um, bum, update, subTree } = instance;
+    // beforeUnmount hook
+    if (bum) {
+      invokeArrayFns(bum);
+    }
+    if (update) {
+      // 停止响应式更新
+      update.active = false;
+      unmount(subTree);
+    }
+    instance.isMounted = false;
+    // unmounted hook
+    if (um) {
+      invokeArrayFns(um);
+    }
+  };
+
   const unmount = (vnode) => {
-    hostRemove(vnode.el);
+    if (vnode.shapeFlag & ShapeFlags.COMPONENT) {
+      unmountComponent(vnode.component);
+    } else {
+      hostRemove(vnode.el);
+    }
   };
 
   const render = (vnode, container) => {
