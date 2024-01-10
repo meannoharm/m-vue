@@ -51,3 +51,9 @@ export const toHandlerKey = (str: string) => (str ? `on${capitalize(str)}` : ``)
 // \BT 就可以匹配到 T 前面是字母的位置
 const hyphenateRE = /\B([A-Z])/g;
 export const hyphenate = (str: string) => str.replace(hyphenateRE, '-$1').toLowerCase();
+
+export const invokeArrayFns = (fns: Function[], arg?: any) => {
+  for (let i = 0; i < fns.length; i++) {
+    fns[i](arg);
+  }
+};

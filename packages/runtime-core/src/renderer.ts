@@ -1,4 +1,4 @@
-import { hasOwn, isNumber, isString, ShapeFlags } from '@m-vue/shared';
+import { hasOwn, isNumber, isString, ShapeFlags, invokeArrayFns } from '@m-vue/shared';
 import { createVnode, Fragment, isSameVnode, Text } from './vnode';
 import { reactive, ReactiveEffect } from '@m-vue/reactivity';
 import { queueJob } from './scheduler';
@@ -265,21 +265,38 @@ export function createRenderer(renderOptions) {
     const { render } = instance;
     const componentUpdateFn = () => {
       if (!instance.isMounted) {
+        const { bm, m } = instance;
+        // beforeMount hook
+        if (bm) {
+          invokeArrayFns(bm);
+        }
         // 初始化
         const usbTree = render.call(instance.proxy);
         patch(null, usbTree, container, anchor);
         instance.subTree = usbTree;
         instance.isMounted = true;
+        // mounted hook
+        if (m) {
+          invokeArrayFns(m);
+        }
       } else {
         // 更新
-        const { next } = instance;
+        const { next, bu, u } = instance;
         if (next) {
           // 更新前拿到最新的属性
           updateComponentPreRender(instance, next);
         }
+        // beforeUpdate hook
+        if (bu) {
+          invokeArrayFns(bu);
+        }
         const subTree = render.call(instance.proxy);
         patch(instance.subTree, subTree, container, anchor);
         instance.subTree = subTree;
+        // update hook
+        if (u) {
+          invokeArrayFns(u);
+        }
       }
     };
 
