@@ -4,7 +4,6 @@ import { reactive, ReactiveEffect } from '@m-vue/reactivity';
 import { queueJob } from './scheduler';
 import { initProps, updateProps, hasPropsChanged } from './componentProps';
 import { createComponentInstance, setupComponent } from './component';
-import { should } from 'vitest';
 
 export function createRenderer(renderOptions) {
   let {
