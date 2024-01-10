@@ -1,9 +1,11 @@
 import { hasOwn, isNumber, isString, ShapeFlags, invokeArrayFns } from '@m-vue/shared';
 import { createVnode, Fragment, isSameVnode, Text } from './vnode';
 import { reactive, ReactiveEffect } from '@m-vue/reactivity';
-import { queueJob } from './scheduler';
+import { queueJob, queuePostFlushCb } from './scheduler';
 import { initProps, updateProps, hasPropsChanged } from './componentProps';
 import { createComponentInstance, setupComponent } from './component';
+
+export const queuePostRenderEffect = queuePostFlushCb;
 
 export function createRenderer(renderOptions) {
   let {
@@ -276,7 +278,7 @@ export function createRenderer(renderOptions) {
         instance.isMounted = true;
         // mounted hook
         if (m) {
-          invokeArrayFns(m);
+          queuePostRenderEffect(m);
         }
       } else {
         // 更新
@@ -294,7 +296,7 @@ export function createRenderer(renderOptions) {
         instance.subTree = subTree;
         // update hook
         if (u) {
-          invokeArrayFns(u);
+          queuePostRenderEffect(u);
         }
       }
     };
@@ -388,7 +390,7 @@ export function createRenderer(renderOptions) {
     instance.isMounted = false;
     // unmounted hook
     if (um) {
-      invokeArrayFns(um);
+      queuePostRenderEffect(um);
     }
   };
 
