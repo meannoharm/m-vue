@@ -26,7 +26,7 @@ class RefImpl {
   }
 }
 
-export const ref = (value) => {
+export const ref = (value?: unknown) => {
   return new RefImpl(value);
 };
 

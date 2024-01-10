@@ -16,7 +16,7 @@ export const isFunction = (value) => {
 
 export const isArray = Array.isArray;
 
-export const assign = Object.assign;
+export const extend = Object.assign;
 
 export const objectToString = Object.prototype.toString;
 export const toTypeString = (value: unknown): string => objectToString.call(value);

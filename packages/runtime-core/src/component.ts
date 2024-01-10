@@ -94,7 +94,7 @@ function createSetupContext(instance) {
   };
 }
 
-let currentInstance = {};
+export let currentInstance = null;
 // 这个接口暴露给用户，用户可以在 setup 中获取组件实例 instance
 export function getCurrentInstance(): any {
   return currentInstance;

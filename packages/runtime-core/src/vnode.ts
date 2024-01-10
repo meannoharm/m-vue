@@ -13,7 +13,7 @@ export function isSameVnode(n1, n2) {
   return n1.type === n2.type && n1.key === n2.key;
 }
 
-export function createVnode(type, props, children = null) {
+export function createVnode(type, props = null, children = null) {
   // 组合方案 shapeFlag
   let shapeFlag = isString(type)
     ? ShapeFlags.ELEMENT

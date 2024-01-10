@@ -1,9 +1,9 @@
-import { isObject } from "./../../shared/src/index";
-import { isArray } from "@m-vue/shared";
-import { createVnode, isVnode } from "./vnode";
+import { isObject } from './../../shared/src/index';
+import { isArray } from '@m-vue/shared';
+import { createVnode, isVnode } from './vnode';
 
 // 返回后children只可能是数组或者文本
-export function h(type, propsChildren, children) {
+export function h(type, propsChildren?, children?) {
   const l = arguments.length;
 
   if (l === 2) {
@@ -31,7 +31,6 @@ export function h(type, propsChildren, children) {
       children = [children];
     }
 
-    // 等于3个参数的时候
     return createVnode(type, propsChildren, children);
   }
 }
