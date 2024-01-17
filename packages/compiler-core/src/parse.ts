@@ -11,7 +11,7 @@ export interface Token {
   tag?: string;
   tagType?: ElementTypes;
   content?: Token | string;
-  helpers: string[];
+  helpers?: string[];
 }
 
 export interface ParserContext {
