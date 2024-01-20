@@ -1,5 +1,6 @@
 import { baseParse } from '../src/parse';
 import { transform } from '../src/transform';
+import { TO_DISPLAY_STRING } from '../src/runtimeHelpers';
 
 describe('transform', () => {
   test('context state', () => {
@@ -16,6 +17,7 @@ describe('transform', () => {
 
     const div = ast.children[0];
     expect(calls.length).toBe(4);
+    console.log(calls);
     expect(calls[0]).toMatchObject([ast, {}]);
     expect(calls[1]).toMatchObject([div, {}]);
     expect(calls[2]).toMatchObject([div.children[0], {}]);
@@ -25,6 +27,6 @@ describe('transform', () => {
   test('should inject toString helper for interpolations', () => {
     const ast = baseParse('{{ foo }}');
     transform(ast, {});
-    expect(ast.helpers).toContain(`_toString`);
+    expect(ast.helpers).toContain(TO_DISPLAY_STRING);
   });
 });

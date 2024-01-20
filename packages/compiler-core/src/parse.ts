@@ -1,17 +1,8 @@
-import { ElementTypes, NodeTypes } from './ast';
+import { ElementTypes, NodeTypes, Token } from './ast';
 
 const enum TagType {
   Start,
   End,
-}
-
-export interface Token {
-  type: NodeTypes;
-  children?: Token[];
-  tag?: string;
-  tagType?: ElementTypes;
-  content?: Token | string;
-  helpers?: string[];
 }
 
 export interface ParserContext {
@@ -141,6 +132,10 @@ function parseInterpolation(context: ParserContext): Token {
   const closeDelimiter = '}}';
 
   const closeIndex = context.source.indexOf(closeDelimiter, openDelimiter.length);
+
+  if (closeIndex === -1) {
+    throw new Error(`Interpolation is missing closing delimiter '${closeDelimiter}'.`);
+  }
 
   // 去掉 '{{'
   advanceBy(context, openDelimiter.length);
